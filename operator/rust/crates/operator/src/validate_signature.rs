@@ -64,14 +64,34 @@ async fn validate_signature(
 ) -> Result<()> {
     let pr = get_signer(&KEYS[0], ANVIL_RPC_URL);
     
+    // First create and sort operators
+    let mut operator_addresses = Vec::new();
+    let mut key_map = std::collections::HashMap::new();
+    
+    // Create a mapping of addresses to keys and collect addresses
+    for key in KEYS.iter() {
+        let signer = PrivateKeySigner::from_str(key)?;
+        let address = signer.address();
+        operator_addresses.push(address);
+        key_map.insert(address, key.clone());
+    }
+    
+    // Sort operator addresses
+    operator_addresses.sort();
+    
+    // Create sorted DynSolValue vectors
     let mut operators: Vec<DynSolValue> = Vec::new();
     let mut signatures: Vec<DynSolValue> = Vec::new();
     
     let m_hash = eip191_hash_message(keccak256(message.abi_encode_packed()));
     
-    for key in KEYS.iter() {
+    // Create signatures in the same order as sorted operators
+    for address in operator_addresses {
+        operators.push(DynSolValue::Address(address));
+        
+        // Get corresponding key and create signature
+        let key = key_map.get(&address).expect("Key must exist for address");
         let signer = PrivateKeySigner::from_str(key)?;
-        operators.push(DynSolValue::Address(signer.address()));
         signatures.push(DynSolValue::Bytes(signer.sign_hash_sync(&m_hash)?.into()));
     }
     

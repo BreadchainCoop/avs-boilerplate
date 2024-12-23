@@ -231,7 +231,7 @@ async fn register_operator() -> Result<()> {
 
 #[tokio::main]
 pub async fn main() {
-    use tokio::signal;
+    // use tokio::signal;
     dotenv().ok();
     init_logger(LogLevel::Info);
     if let Err(e) = register_operator().await {
