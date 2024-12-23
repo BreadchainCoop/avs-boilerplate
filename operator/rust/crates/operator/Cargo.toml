@@ -48,6 +48,10 @@ serial_test = "3.1.1"
 name = "start_operator"
 path = "src/start_operator.rs"
 
+[[bin]]
+name = "validate_signature"
+path = "src/validate_signature.rs" 
+
 
 [[bin]]
 name = "spam_tasks"

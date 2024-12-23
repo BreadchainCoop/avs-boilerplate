@@ -239,14 +239,14 @@ pub async fn main() {
         return;
     }
 
-    // Start the task monitoring as a separate async task to keep the process running
-    tokio::spawn(async {
-        if let Err(e) = monitor_new_tasks().await {
-            eprintln!("Failed to monitor new tasks: {:?}", e);
-        }
-    });
+    // // Start the task monitoring as a separate async task to keep the process running
+    // tokio::spawn(async {
+    //     if let Err(e) = monitor_new_tasks().await {
+    //         eprintln!("Failed to monitor new tasks: {:?}", e);
+    //     }
+    // });
 
-    // Wait for a Ctrl+C signal to gracefully shut down
-    let _ = signal::ctrl_c().await;
-    get_logger().info("Received Ctrl+C, shutting down...", "");
+    // // Wait for a Ctrl+C signal to gracefully shut down
+    // let _ = signal::ctrl_c().await;
+    // get_logger().info("Received Ctrl+C, shutting down...", "");
 }
