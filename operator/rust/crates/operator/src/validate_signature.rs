@@ -24,10 +24,26 @@ fn read_private_keys() -> Result<Vec<String>> {
     
     for i in 1..=3 {
         let key_path = format!("{}/.nodes/operator{}", home, i);
+        get_logger().info(&format!("Reading key from path: {}", key_path), "");
         let key = std::fs::read_to_string(key_path)?;
-        keys.push(key.trim().to_string());
+        // Clean and format the key
+        let clean_key = key.trim()
+            .trim_start_matches("0x")  // Remove 0x prefix if present
+            .to_string();
+        
+        get_logger().info(&format!("Key length: {}", clean_key.len()), "");
+        
+        // Ensure the key is properly formatted with 0x prefix
+        let formatted_key = if clean_key.len() == 64 {
+            format!("0x{}", clean_key)
+        } else {
+            return Err(eyre::eyre!("Invalid key length {} in operator{}", clean_key.len(), i));
+        };
+        
+        keys.push(formatted_key);
     }
     
+    get_logger().info(&format!("Successfully loaded {} keys", keys.len()), "");
     Ok(keys)
 }
 static KEYS: Lazy<Vec<String>> = Lazy::new(|| read_private_keys().expect("failed to read private keys"));
