@@ -26,18 +26,29 @@ fn read_private_keys() -> Result<Vec<String>> {
         let key_path = format!("{}/.nodes/operator{}", home, i);
         get_logger().info(&format!("Reading key from path: {}", key_path), "");
         let key = std::fs::read_to_string(key_path)?;
-        // Clean and format the key
-        let clean_key = key.trim()
-            .trim_start_matches("0x")  // Remove 0x prefix if present
+        
+        // Extract the key from environment variable format
+        let clean_key = key
+            .lines()
+            .find(|line| line.contains("PRIVATE_KEY"))
+            .and_then(|line| line.split('=').nth(1))
+            .ok_or_else(|| eyre::eyre!("No private key found in operator{}", i))?
+            .trim()
+            .trim_start_matches("0x")
             .to_string();
         
-        get_logger().info(&format!("Key length: {}", clean_key.len()), "");
+        get_logger().info(&format!("Original line length: {}, Cleaned key length: {}", key.trim().len(), clean_key.len()), "");
         
         // Ensure the key is properly formatted with 0x prefix
         let formatted_key = if clean_key.len() == 64 {
             format!("0x{}", clean_key)
         } else {
-            return Err(eyre::eyre!("Invalid key length {} in operator{}", clean_key.len(), i));
+            return Err(eyre::eyre!(
+                "Invalid key length {} (expected 64) in operator{}. Original line: {}", 
+                clean_key.len(), 
+                i,
+                key.trim().len()
+            ));
         };
         
         keys.push(formatted_key);
