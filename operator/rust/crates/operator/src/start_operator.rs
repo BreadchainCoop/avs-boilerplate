@@ -28,8 +28,13 @@ use once_cell::sync::Lazy;
 use rand::RngCore;
 use std::{env, str::FromStr};
 
-pub const ANVIL_RPC_URL: &str = "http://ethereum:8545";
-
+pub const fn get_rpc_url() -> &'static str {
+    match option_env!("TESTNET_RPC_URL") {
+        Some(url) => url,
+        None => "http://ethereum:8545"
+    }
+}
+pub const ANVIL_RPC_URL: &str = get_rpc_url();
 static KEY: Lazy<String> =
     Lazy::new(|| env::var("PRIVATE_KEY").expect("failed to retrieve private key"));
 

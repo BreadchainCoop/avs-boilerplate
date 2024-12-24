@@ -16,8 +16,13 @@ use hello_world_utils::parse_stake_registry_address;
 use once_cell::sync::Lazy;
 use std::{env, str::FromStr};
 
-pub const ANVIL_RPC_URL: &str = "http://ethereum:8545";
-
+pub const fn get_rpc_url() -> &'static str {
+    match option_env!("TESTNET_RPC_URL") {
+        Some(url) => url,
+        None => "http://ethereum:8545"
+    }
+}
+pub const ANVIL_RPC_URL: &str = get_rpc_url();
 fn read_private_keys() -> Result<Vec<String>> {
     let home = env::var("HOME").expect("HOME environment variable not set");
     let mut keys = Vec::new();
@@ -73,7 +78,7 @@ async fn validate_signature(
         let signer = PrivateKeySigner::from_str(key)?;
         let address = signer.address();
         operator_addresses.push(address);
-        key_map.insert(address, key.clone());
+        key_map.insert(address, key.to_string());
     }
     
     // Sort operator addresses
