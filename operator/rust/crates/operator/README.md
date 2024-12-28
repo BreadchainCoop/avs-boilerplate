@@ -9,6 +9,37 @@ This utility provides functionality to:
 2. Generate sorted operator signatures
 3. Submit signature validation to the blockchain
 
+## Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant KeyReader
+    participant SignatureValidator
+    participant Blockchain
+
+    Client->>SignatureValidator: validate_signature("message")
+    SignatureValidator->>KeyReader: read_private_keys()
+    loop For each key file
+        KeyReader->>KeyReader: Read ~/.nodes/operatorN
+        KeyReader->>KeyReader: Parse PRIVATE_KEY
+        KeyReader->>KeyReader: Format & validate key
+    end
+    KeyReader-->>SignatureValidator: Return keys vector
+    
+    SignatureValidator->>SignatureValidator: Sort operator addresses
+    loop For each sorted operator
+        SignatureValidator->>SignatureValidator: Generate signature
+    end
+    
+    SignatureValidator->>Blockchain: validateOffchainMessage(
+        dataHash,
+        signatureData
+    )
+    Blockchain-->>SignatureValidator: Transaction hash
+    SignatureValidator-->>Client: Result
+```
+
 ## Usage
 
 ### Running the Utility
