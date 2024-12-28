@@ -12,7 +12,10 @@ use eigen_logging::{get_logger, init_logger, log_level::LogLevel};
 use eigen_utils::{get_provider, get_signer};
 use eyre::Result;
 use hello_world_utils::ecdsastakeregistry::ECDSAStakeRegistry;
+use hello_world_utils::offchainmessageconsumer::OffchainMessageConsumer;
+use hello_world_utils::offchainmessageconsumer::ILayerSDK::Task;
 use hello_world_utils::parse_stake_registry_address;
+use hello_world_utils::parse_offchain_message_consumer_address;
 use once_cell::sync::Lazy;
 use std::{env, str::FromStr};
 
@@ -107,10 +110,13 @@ async fn validate_signature(
         DynSolValue::Uint(current_block, 32),
     ])
     .abi_encode_params();
-    
-    let stake_registry_address = parse_stake_registry_address("contracts/deployments/hello-world/17000.json")?;
-    let ecdsa_registry = ECDSAStakeRegistry::new(stake_registry_address, &pr);
-    let tx = ecdsa_registry.isValidSignature(m_hash, signature_data.into()).gas(500000).send().await?.get_receipt().await?.transaction_hash;
+    let task = Task {
+        dataHash: m_hash,
+        signatureData: signature_data.into(),
+    };
+    let offchain_message_consumer_address = parse_offchain_message_consumer_address("contracts/deployments/hello-world/17000.json")?;
+    let offchain_message_consumer = OffchainMessageConsumer::new(offchain_message_consumer_address, &pr);
+    let tx = offchain_message_consumer.validateOffchainMessage(task).gas(500000).send().await?.get_receipt().await?.transaction_hash;
     get_logger().info(&format!("Signature verification completed with tx hash {}", tx), "");
     Ok(())
 }
