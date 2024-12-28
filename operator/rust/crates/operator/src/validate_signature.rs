@@ -32,9 +32,7 @@ fn read_private_keys() -> Result<Vec<String>> {
     
     for i in 1..=3 {
         let key_path = format!("{}/.nodes/operator{}", home, i);
-        get_logger().info(&format!("Reading key from path: {}", key_path), "");
         let key = std::fs::read_to_string(key_path)?;
-        
         // Extract the key from environment variable format
         let clean_key = key
             .lines()
@@ -44,8 +42,6 @@ fn read_private_keys() -> Result<Vec<String>> {
             .trim()
             .trim_start_matches("0x")
             .to_string();
-        
-        get_logger().info(&format!("Original line length: {}, Cleaned key length: {}", key.trim().len(), clean_key.len()), "");
         
         // Ensure the key is properly formatted with 0x prefix
         let formatted_key = if clean_key.len() == 64 {
@@ -61,8 +57,6 @@ fn read_private_keys() -> Result<Vec<String>> {
         
         keys.push(formatted_key);
     }
-    
-    get_logger().info(&format!("Successfully loaded {} keys", keys.len()), "");
     Ok(keys)
 }
 static KEYS: Lazy<Vec<String>> = Lazy::new(|| read_private_keys().expect("failed to read private keys"));
