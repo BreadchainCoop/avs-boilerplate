@@ -28,8 +28,13 @@ use once_cell::sync::Lazy;
 use rand::RngCore;
 use std::{env, str::FromStr};
 
-pub const ANVIL_RPC_URL: &str = "http://localhost:8545";
-
+pub const fn get_rpc_url() -> &'static str {
+    match option_env!("TESTNET_RPC_URL") {
+        Some(url) => url,
+        None => "http://ethereum:8545"
+    }
+}
+pub const ANVIL_RPC_URL: &str = get_rpc_url();
 static KEY: Lazy<String> =
     Lazy::new(|| env::var("PRIVATE_KEY").expect("failed to retrieve private key"));
 
@@ -59,7 +64,7 @@ async fn sign_and_response_to_task(
         "",
     );
     let hello_world_contract_address: Address =
-        parse_hello_world_service_manager("contracts/deployments/hello-world/31337.json")?;
+    parse_hello_world_service_manager("contracts/deployments/hello-world/17000.json")?;
     let hello_world_contract = HelloWorldServiceManager::new(hello_world_contract_address, &pr);
 
     let response_hash = hello_world_contract
@@ -88,7 +93,7 @@ async fn sign_and_response_to_task(
 async fn monitor_new_tasks() -> Result<()> {
     let pr = get_signer(&KEY.clone(), ANVIL_RPC_URL);
     let hello_world_contract_address: Address =
-        parse_hello_world_service_manager("contracts/deployments/hello-world/31337.json")?;
+        parse_hello_world_service_manager("contracts/deployments/hello-world/17000.json")?;
     let mut latest_processed_block = pr.get_block_number().await?;
 
     loop {
@@ -130,7 +135,7 @@ async fn register_operator() -> Result<()> {
     let default_slasher = Address::ZERO; // We don't need slasher for our example.
     let default_strategy = Address::ZERO; // We don't need strategy for our example.
 
-    let data = std::fs::read_to_string("contracts/deployments/core/31337.json")?;
+    let data = std::fs::read_to_string("contracts/deployments/core/17000.json")?;
     let el_parsed: EigenLayerData = serde_json::from_str(&data)?;
     let delegation_manager_address: Address = el_parsed.addresses.delegation.parse()?;
     let avs_directory_address: Address = el_parsed.addresses.avs_directory.parse()?;
@@ -165,16 +170,16 @@ async fn register_operator() -> Result<()> {
         .unwrap();
     get_logger().info(&format!("is registered {}", is_registered), &"");
     #[allow(unused)]
-    let tx_hash = elcontracts_writer_instance
-        .register_as_operator(operator)
-        .await?;
-    get_logger().info(
-        &format!(
-            "Operator registered on EL successfully tx_hash {:?}",
-            tx_hash
-        ),
-        &"",
-    );
+    // let tx_hash = elcontracts_writer_instance
+    //     .register_as_operator(operator)
+    //     .await?;
+    // get_logger().info(
+    //     &format!(
+    //         "Operator registered on EL successfully tx_hash {:?}",
+    //         tx_hash
+    //     ),
+    //     &"",
+    // );
     let mut salt = [0u8; 32];
     rand::rngs::OsRng.fill_bytes(&mut salt);
 
@@ -183,7 +188,7 @@ async fn register_operator() -> Result<()> {
     let expiry: U256 = U256::from(now + 3600);
 
     let hello_world_contract_address: Address =
-        parse_hello_world_service_manager("contracts/deployments/hello-world/31337.json")?;
+        parse_hello_world_service_manager("contracts/deployments/hello-world/17000.json")?;
     let digest_hash = elcontracts_reader_instance
         .calculate_operator_avs_registration_digest_hash(
             signer.address(),
@@ -200,7 +205,7 @@ async fn register_operator() -> Result<()> {
         expiry: expiry,
     };
     let stake_registry_address =
-        parse_stake_registry_address("contracts/deployments/hello-world/31337.json")?;
+        parse_stake_registry_address("contracts/deployments/hello-world/17000.json")?;
     let contract_ecdsa_stake_registry = ECDSAStakeRegistry::new(stake_registry_address, &pr);
     let registeroperator_details_call: alloy::contract::CallBuilder<
         _,
@@ -231,7 +236,7 @@ async fn register_operator() -> Result<()> {
 
 #[tokio::main]
 pub async fn main() {
-    use tokio::signal;
+    // use tokio::signal;
     dotenv().ok();
     init_logger(LogLevel::Info);
     if let Err(e) = register_operator().await {
@@ -239,14 +244,14 @@ pub async fn main() {
         return;
     }
 
-    // Start the task monitoring as a separate async task to keep the process running
-    tokio::spawn(async {
-        if let Err(e) = monitor_new_tasks().await {
-            eprintln!("Failed to monitor new tasks: {:?}", e);
-        }
-    });
+    // // Start the task monitoring as a separate async task to keep the process running
+    // tokio::spawn(async {
+    //     if let Err(e) = monitor_new_tasks().await {
+    //         eprintln!("Failed to monitor new tasks: {:?}", e);
+    //     }
+    // });
 
-    // Wait for a Ctrl+C signal to gracefully shut down
-    let _ = signal::ctrl_c().await;
-    get_logger().info("Received Ctrl+C, shutting down...", "");
+    // // Wait for a Ctrl+C signal to gracefully shut down
+    // let _ = signal::ctrl_c().await;
+    // get_logger().info("Received Ctrl+C, shutting down...", "");
 }
