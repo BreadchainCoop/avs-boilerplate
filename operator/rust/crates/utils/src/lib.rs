@@ -4,6 +4,7 @@ pub mod helloworldservicemanager;
 
 #[allow(clippy::all, clippy::pedantic, unused_imports)]
 pub mod ecdsastakeregistry;
+pub mod offchainmessageconsumer;
 
 use alloy::primitives::Address;
 use serde::Deserialize;
@@ -38,6 +39,8 @@ pub struct HelloWorldAddresses {
     stake_registry_impl: String,
     strategy: String,
     token: String,
+    #[serde(rename = "offchainMessageConsumer")]
+    pub offchain_message_consumer: String,
 }
 
 #[allow(unused)]
@@ -89,6 +92,13 @@ pub fn parse_stake_registry_address(path: &str) -> eyre::Result<Address> {
     let parsed: HelloWorldData = serde_json::from_str(&data)?;
     let stake_registry_address: Address = parsed.addresses.stake_registry.parse()?;
     Ok(stake_registry_address)
+}
+
+pub fn parse_offchain_message_consumer_address(path: &str) -> eyre::Result<Address> {
+    let data = std::fs::read_to_string(path)?;
+    let parsed: HelloWorldData = serde_json::from_str(&data)?;
+    let offchain_message_consumer_address: Address = parsed.addresses.offchain_message_consumer.parse()?;
+    Ok(offchain_message_consumer_address)
 }
 
 pub fn parse_delegation_manager_address(path: &str) -> eyre::Result<Address> {
